@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configs-explorer
+data:
+    {{- with .Values.config.endpoints}}
+    endpoints: |
+        {"marketData": "{{ .marketData }}", "statisticsService": "{{ .statisticsService }}"}
+    {{- end }}
+    {{- with .Values.config.networkConfig}}
+    networkConfig: |
+        {"namespaceName": "{{ .namespaceName }}", "mosaicId": "{{ .mosaicId }}", "divisibility": "{{ .divisibility }}", "networkIdentifier": {{ .networkIdentifier }}}
+    {{- end }}

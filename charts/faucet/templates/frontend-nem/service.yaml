@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "faucet.fullname" . }}-frontend-nem
+  labels:
+    {{- include "faucet.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.services.frontend.nem.type }}
+  ports:
+    - port: {{ .Values.services.frontend.nem.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "faucet.selectorLabels" . | nindent 4 }}

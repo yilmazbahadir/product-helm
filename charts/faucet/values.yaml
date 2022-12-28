@@ -1,0 +1,152 @@
+# Default values for faucet.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+config:
+  backend:
+    env: |
+      NEM_FAUCET_ADDRESS=<Address>
+      NEM_FAUCET_PRIVATE_KEY=<private key>
+      NEM_ENDPOINT=http://hugetestalice.nem.ninja:7890
+      RECEIPT_MAX_BALANCE=200000000
+      SEND_OUT_MAX_AMOUNT=500000000
+      MOSAIC_DIVISIBILITY=6
+      PORT=8080
+  authenticator:
+    env: |
+      PORT=5002
+      TWITTER_APP_KEY=twitterAppKey
+      TWITTER_APP_SECRET=twitterAppSecret
+      TWITTER_CALLBACK_URL=http://127.0.0.1:3000
+      JWT_SECRET=hello
+  frontend:
+    nem:
+      env: |
+        REACT_APP_FAUCET_ADDRESS=<Address>
+        REACT_APP_REQ_FAUCET_BALANCE=10000000
+        REACT_APP_MAX_SEND_AMOUNT=500000000
+        REACT_APP_BACKEND_URL=http://127.0.0.1:5001
+        REACT_APP_BACKEND_AUTH_URL=http://127.0.0.1:5002
+
+deployments:
+  backend:
+    replicaCount : 1
+    image:
+      repository: symbolplatform/faucet-backend
+      pullPolicy: IfNotPresent
+      tag: "1.0.0"
+  authenticator:
+    replicaCount : 1
+    image:
+      repository: symbolplatform/faucet-authenticator
+      pullPolicy: IfNotPresent
+      tag: "1.0.0"
+  frontend:
+    nem:
+      replicaCount : 1
+      image:
+        repository: symbolplatform/faucet-frontend-nem
+        pullPolicy: IfNotPresent
+        tag: "1.0.0"
+    symbol:
+      replicaCount : 1
+      image:
+        repository: symbolplatform/faucet-frontend-symbol
+        pullPolicy: IfNotPresent
+        tag: "1.0.0"
+
+podAnnotations: {}
+podSecurityContext: {}
+  # fsGroup: 2000
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+services:
+  backend:
+    type: ClusterIP
+    port: 5001
+  authenticator:
+    type: ClusterIP
+    port: 5002
+  frontend:
+    nem:
+      type: ClusterIP
+      port: 3000
+    symbol:
+      type: ClusterIP
+      port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: localhost
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+          backend:
+            service:
+              name: frontend-nem
+              port: 3000
+        - path: /api
+          pathType: ImplementationSpecific
+          backend:
+            service:
+              name: backend
+              port: 5001
+        - path: /auth
+          pathType: ImplementationSpecific
+          backend:
+            service:
+              name: authenticator
+              port: 5002
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

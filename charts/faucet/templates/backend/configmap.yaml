@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "faucet.fullname" . }}-backend
+  labels:
+    {{- include "faucet.labels" . | nindent 4 }}
+data:
+  env: |
+    {{- .Values.config.backend.env | nindent 4 }}

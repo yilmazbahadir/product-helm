@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "faucet.fullname" . }}
+  name: {{ include "faucet.fullname" . }}-backend
   labels:
     {{- include "faucet.labels" . | nindent 4 }}
 spec:
@@ -31,20 +31,23 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.deployments.backend.image.repository }}:{{ .Values.deployments.backend.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.deployments.backend.image.pullPolicy }}
           ports:
-            - name: http
-              containerPort: 80
+            - name: backend-port
+              containerPort: 5002
               protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "faucet.fullname" . }}-backend
           livenessProbe:
             httpGet:
               path: /
-              port: http
+              port: backend-port
           readinessProbe:
             httpGet:
               path: /
-              port: http
+              port: backend-port
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

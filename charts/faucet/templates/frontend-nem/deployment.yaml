@@ -11,6 +11,7 @@ spec:
   selector:
     matchLabels:
       {{- include "faucet.selectorLabels" . | nindent 6 }}
+      {{- toYaml .Values.deployments.frontend.nem.podLabels | nindent 6}}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -19,6 +20,7 @@ spec:
       {{- end }}
       labels:
         {{- include "faucet.selectorLabels" . | nindent 8 }}
+        {{- toYaml .Values.deployments.frontend.nem.podLabels | nindent 8}}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -35,19 +37,15 @@ spec:
           imagePullPolicy: {{ .Values.deployments.frontend.nem.image.pullPolicy }}
           ports:
             - name: fe-nem-port
-              containerPort: 5002
+              containerPort: 3000
               protocol: TCP
           envFrom:
             - configMapRef:
                 name: {{ include "faucet.fullname" . }}-frontend-nem
           livenessProbe:
-            httpGet:
-              path: /
-              port: fe-nem-port
+            {{- toYaml .Values.deployments.frontend.nem.livenessProbe | nindent 12 }}
           readinessProbe:
-            httpGet:
-              path: /
-              port: fe-nem-port
+            {{- toYaml .Values.deployments.frontend.nem.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

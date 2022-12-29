@@ -8,8 +8,9 @@ spec:
   type: {{ .Values.services.frontend.nem.type }}
   ports:
     - port: {{ .Values.services.frontend.nem.port }}
-      targetPort: http
+      targetPort: fe-nem-port
       protocol: TCP
-      name: http
+      name: fe-nem-port
   selector:
     {{- include "faucet.selectorLabels" . | nindent 4 }}
+    {{- toYaml .Values.deployments.frontend.nem.podLabels | nindent 4}}

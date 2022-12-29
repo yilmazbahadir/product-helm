@@ -11,6 +11,7 @@ spec:
   selector:
     matchLabels:
       {{- include "faucet.selectorLabels" . | nindent 6 }}
+      {{- toYaml .Values.deployments.authenticator.podLabels | nindent 6}}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -19,6 +20,7 @@ spec:
       {{- end }}
       labels:
         {{- include "faucet.selectorLabels" . | nindent 8 }}
+        {{- toYaml .Values.deployments.authenticator.podLabels | nindent 8}}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -41,13 +43,9 @@ spec:
             - configMapRef:
                 name: {{ include "faucet.fullname" . }}-authenticator
           livenessProbe:
-            httpGet:
-              path: /
-              port: auth-port
+            {{- toYaml .Values.deployments.authenticator.livenessProbe | nindent 12 }}
           readinessProbe:
-            httpGet:
-              path: /
-              port: auth-port
+            {{- toYaml .Values.deployments.authenticator.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

@@ -17,30 +17,33 @@ serviceAccount:
 
 config:
   backend:
-    env: |
-      NEM_FAUCET_ADDRESS=<Address>
-      NEM_FAUCET_PRIVATE_KEY=<private key>
-      NEM_ENDPOINT=http://hugetestalice.nem.ninja:7890
-      RECEIPT_MAX_BALANCE=200000000
-      SEND_OUT_MAX_AMOUNT=500000000
-      MOSAIC_DIVISIBILITY=6
-      PORT=8080
+    env:
+      PORT: "5001"
+      NEM_FAUCET_ADDRESS: TAZJ3KEPYAQ4G4Y6Q2IRZTQPU7RAKGYZULZURKTO
+      NEM_FAUCET_PRIVATE_KEY: <PrivateKey>
+      NEM_ENDPOINT: http://95.216.73.243:7890
+      RECEIPT_MAX_BALANCE: "200000000"
+      SEND_OUT_MAX_AMOUNT: "500000000"
+      MOSAIC_DIVISIBILITY: "6"
+      JWT_SECRET: hello
+      MIN_FOLLOWERS_COUNT: "10"
+      MIN_ACCOUNT_AGE: "30"
   authenticator:
-    env: |
-      PORT=5002
-      TWITTER_APP_KEY=twitterAppKey
-      TWITTER_APP_SECRET=twitterAppSecret
-      TWITTER_CALLBACK_URL=http://127.0.0.1:3000
-      JWT_SECRET=hello
+    env:
+      PORT: "5002"
+      TWITTER_APP_KEY: <TwitterAppKey>
+      TWITTER_APP_SECRET: <TwitterAppSecret>
+      TWITTER_CALLBACK_URL: http://localhost
+      JWT_SECRET: hello
   frontend:
     nem:
-      env: |
-        REACT_APP_FAUCET_ADDRESS=<Address>
-        REACT_APP_REQ_FAUCET_BALANCE=10000000
-        REACT_APP_MAX_SEND_AMOUNT=500000000
-        REACT_APP_BACKEND_URL=http://127.0.0.1:5001
-        REACT_APP_BACKEND_AUTH_URL=http://127.0.0.1:5002
-
+      env:
+        PORT: "3000"
+        REACT_APP_FAUCET_ADDRESS: TAZJ3KEPYAQ4G4Y6Q2IRZTQPU7RAKGYZULZURKTO
+        REACT_APP_REQ_FAUCET_BALANCE: "10000000"
+        REACT_APP_MAX_SEND_AMOUNT: "500000000"
+        REACT_APP_BACKEND_URL: http://localhost/
+        REACT_APP_AUTH_URL: http://localhost/
 deployments:
   backend:
     replicaCount : 1
@@ -48,12 +51,36 @@ deployments:
       repository: symbolplatform/faucet-backend
       pullPolicy: IfNotPresent
       tag: "1.0.0"
+    podLabels:
+      app: backend
+    livenessProbe:
+      tcpSocket:
+        port: backend-port
+      initialDelaySeconds: 10
+      periodSeconds: 30
+    readinessProbe:
+      tcpSocket:
+        port: backend-port
+      initialDelaySeconds: 10
+      periodSeconds: 10
   authenticator:
     replicaCount : 1
     image:
       repository: symbolplatform/faucet-authenticator
       pullPolicy: IfNotPresent
       tag: "1.0.0"
+    podLabels:
+      app: authenticator
+    livenessProbe:
+      tcpSocket:
+        port: auth-port
+      initialDelaySeconds: 10
+      periodSeconds: 30
+    readinessProbe:
+      tcpSocket:
+        port: auth-port
+      initialDelaySeconds: 10
+      periodSeconds: 10
   frontend:
     nem:
       replicaCount : 1
@@ -61,12 +88,36 @@ deployments:
         repository: symbolplatform/faucet-frontend-nem
         pullPolicy: IfNotPresent
         tag: "1.0.0"
+      podLabels:
+        app: frontend-nem
+      livenessProbe:
+        tcpSocket:
+          port: fe-nem-port
+        initialDelaySeconds: 10
+        periodSeconds: 30
+      readinessProbe:
+        tcpSocket:
+          port: fe-nem-port
+        initialDelaySeconds: 10
+        periodSeconds: 10
     symbol:
       replicaCount : 1
       image:
         repository: symbolplatform/faucet-frontend-symbol
         pullPolicy: IfNotPresent
         tag: "1.0.0"
+      podLabels:
+        app: frontend-symbol
+      livenessProbe:
+        tcpSocket:
+          port: fe-symbol-port
+        initialDelaySeconds: 10
+        periodSeconds: 30
+      readinessProbe:
+        tcpSocket:
+          port: fe-symbol-port
+        initialDelaySeconds: 10
+        periodSeconds: 10
 
 podAnnotations: {}
 podSecurityContext: {}
@@ -89,17 +140,15 @@ services:
   frontend:
     nem:
       type: ClusterIP
-      port: 3000
-    symbol:
-      type: ClusterIP
       port: 80
+    # symbol:
+    #   type: ClusterIP
+    #   port: 80
 
 ingress:
-  enabled: false
-  className: ""
+  enabled: true
+  className: "nginx"
   annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
   hosts:
     - host: localhost
       paths:
@@ -108,23 +157,20 @@ ingress:
           backend:
             service:
               name: frontend-nem
-              port: 3000
-        - path: /api
+              port: 80
+        - path: /claim/xem
           pathType: ImplementationSpecific
           backend:
             service:
               name: backend
               port: 5001
-        - path: /auth
+        - path: /twitter
           pathType: ImplementationSpecific
           backend:
             service:
               name: authenticator
               port: 5002
   tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious

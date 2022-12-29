@@ -8,8 +8,9 @@ spec:
   type: {{ .Values.services.authenticator.type }}
   ports:
     - port: {{ .Values.services.authenticator.port }}
-      targetPort: http
+      targetPort: auth-port
       protocol: TCP
-      name: http
+      name: auth-port
   selector:
     {{- include "faucet.selectorLabels" . | nindent 4 }}
+    {{- toYaml .Values.deployments.authenticator.podLabels | nindent 4}}

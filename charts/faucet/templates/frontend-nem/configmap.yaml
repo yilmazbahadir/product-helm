@@ -5,5 +5,4 @@ metadata:
   labels:
     {{- include "faucet.labels" . | nindent 4 }}
 data:
-  env: |
-    {{- .Values.config.frontend.nem.env | nindent 4 }}
+  {{- toYaml .Values.config.frontend.nem.env | nindent 4 }}
